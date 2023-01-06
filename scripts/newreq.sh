@@ -2,7 +2,7 @@
 #
 # Author: github.com/xae7Jeze
 #
-V=20230106.1
+V=20230106.2
 
 set -e -u
 
@@ -32,7 +32,7 @@ BASEOUTPUTDIR=""
 SUBJECT=""
 CN=""
 S_ALTNAME=""
-D=$(date +"%Y%m%d")
+D=$(date "+%Y%m%d%H%M%S")
 
 
 USAGE() {
@@ -46,7 +46,7 @@ USAGE() {
 		  -o -> NODEFAULT (must exist)
 		  -s -> NODEFAULT (Must be formatted as expected by openssl req '-subj' arg, CN is mandatory and must be valid FQDN)
   
-		  Outputs request and private key to '<output_directory>/<common_name>/<YYYYMMDD>/<common_name>.csr,<common_name>.key'
+		  Outputs request and private key to '<output_directory>/<common_name>/<YYYYmmddHHMMSS>/<common_name>.csr,<common_name>.key'
 	
 		  Version: $V
 	
@@ -110,3 +110,5 @@ openssl req -new -subj "${SUBJECT}" \
   -key "${OUTDIR}/${CN}.key" \
   > "${OUTDIR}/${CN}.csr"
 set +C
+
+echo "${ME}: New request generated in ${OUTDIR}"

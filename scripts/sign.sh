@@ -2,7 +2,7 @@
 #
 # Author: github.com/xae7Jeze
 #
-V=20230106.4
+V=20230106.6
 
 set -e -u
 
@@ -27,11 +27,10 @@ fi
 MYDIR="$(cd "${MYDIR}" && pwd -P)"
 CANAME=${MYDIR##*/}
 
-D=$(date "+%Y%m%d")
+D=$(date "+%Y%m%d%H%M%S")
 CADIR=${MYDIR}
 CACRT="${CADIR}/CA/${CANAME}.crt"
 CAKEY="${CADIR}/CA/${CANAME}.key"
-CASERIAL="${CADIR}/CA/serial.txt"
 DIGEST="sha256"
 DAYS=365
 INFILE=""
@@ -40,11 +39,13 @@ USAGE() {
   cat <<-_
 	Usage: ${ME} [ -d <message_digest> -t <days>] -i <requestfile>
 	Defaults:
-	-d -> ${DIGEST}
-	-i -> NODEFAULT
-	-t -> ${DAYS} (Time in days certificate is valid)
+	  -d -> ${DIGEST}
+	  -i -> NODEFAULT
+	  -t -> ${DAYS} (Time in days certificate is valid)
 	
-	Version: $V     
+    Output goes to ${CADIR}/certs/${CN}/${D}
+	
+	  Version: $V
 	
 	_
 }
@@ -94,6 +95,7 @@ CRTDIR="${CADIR}/certs/${CN}/${D}"
 EXTFILE="${REQDIR}/${CN}.ext"
 REQFILE="${REQDIR}/${CN}.csr"
 CRTFILE="${CRTDIR}/${CN}.crt"
+CASERIAL="${CRTDIR}/${CN}.srl"
 
 mkdir -p "${CRTDIR}" "${REQDIR}"
 set -C
@@ -130,3 +132,5 @@ echo email.${e} = copy
 
 set -C
 openssl x509 -req -in "${REQFILE}" -CA "${CACRT}" -CAkey "${CAKEY}" -CAcreateserial -CAserial "${CASERIAL}" "-${DIGEST}" -extfile "${EXTFILE}" > "${CRTFILE}" -days "${DAYS}"
+
+echo "${ME}: Wrote certificate to ${CRTFILE}"
