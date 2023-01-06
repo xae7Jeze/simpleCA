@@ -2,7 +2,7 @@
 #
 # Author: github.com/xae7Jeze
 #
-V=20230106.5
+V=20230106.6
 
 set -e -u
 
@@ -186,3 +186,4 @@ chmod 700 "${SIGN_SH}"
 openssl genpkey -algorithm RSA "-${KEYCRYPTALGO}" -pkeyopt "rsa_keygen_bits:${RSA_KEY_LENGTH}" > "${CAKEY}"
 openssl req -x509 -new -key "${CAKEY}" "-${DIGEST}" -days "${DAYS}" -subj "$CASUBJECT" > "${CACRT}"
 set +C
+echo "${ME}: CA created in ${CADIR}"
