@@ -1,6 +1,8 @@
 #!/bin/bash
 #
-V=20230106.1
+# Author: github.com/xae7Jeze
+#
+V=20230106.3
 
 set -e -u
 
@@ -10,6 +12,11 @@ LANG=C
 ME=${0##*/}
 umask 077
 
+MYUID=$(id -u)
+if [ ${MYUID:-0} -eq 0 ]; then
+  echo "${ME}: Won't run with UID 0 (root). Exiting" 1>&2
+  exit 1
+fi
 
 if echo "${0}" | fgrep -q / ; then
   MYDIR=${0%/*}
@@ -53,7 +60,7 @@ done
 
 if ! [ -f "${CACRT}" -a -f "${CAKEY}" ]; then
   echo "${ME}: Missing '${CACRT}' and/or '${CAKEY}' in '${CADIR}/CA/'" 1>&2 
-  echo "${ME}: Am I in the top level of CA-Directory-Structure?" 1>&2 
+  echo "${ME}: Am I in the top level of a CA-Directory-Structure?" 1>&2 
   echo "${ME}: Exiting" 1>&2 
   exit 1
 fi
@@ -71,7 +78,7 @@ fi
 
 CN="$(openssl req -in "${INFILE}" -noout -subject | grep -E -o 'CN *= *[0-9a-zA-Z][0-9a-zA-Z.-]*[[0-9a-zA-Z]' | tr 'A-Z' 'a-z' | cut -d= -f2 | tr -dc '[0-9a-z.-]')"
 
-if ! echo "${CN}" | egrep -qi '^[0-9a-z][0-9a-z.-]*[0-9a-z]$'; then
+if ! echo "${CN}" | grep -Eqi '^[0-9a-z][0-9a-z.-]*[0-9a-z]$'; then
   echo "${ME}: Invalid CN (must be valid FQDN)" 1>&2
   exit 1
 fi
@@ -93,15 +100,10 @@ set -C
 
 test -e "${REQFILE}" || cp -i "${INFILE}" "${REQFILE}"
 
-if ! test "$(sha256sum < "${INFILE}")" = "$(sha256sum < "${REQFILE}")"; then
-  echo "${ME}: Copy input file to request dir failed" 1>&2
-  exit 1
-fi
-
 cat > "${EXTFILE}" <<_
 authorityKeyIdentifier=keyid,issuer
 basicConstraints=CA:FALSE
-keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
+keyUsage = digitalSignature, keyEncipherment
 subjectAltName = @alt_names
 
 [alt_names]

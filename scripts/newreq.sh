@@ -1,6 +1,8 @@
 #!/bin/bash
 #
-V=20230106.0
+# Author: github.com/xae7Jeze
+#
+V=20230106.1
 
 set -e -u
 
@@ -10,13 +12,23 @@ LANG=C
 ME=${0##*/}
 umask 077
 
+if [ $(id -u) -eq 0 ]; then
+  echo "${ME}: Won't run with UID 0 (root). Exiting" 1>&2
+  exit 1
+fi
+
+MYUID=$(id -u)
+if [ ${MYUID:-0} -eq 0 ]; then
+  echo "${ME}: Won't run with UID 0 (root). Exiting" 1>&2
+  exit 1
+fi
 
 CN_RE='([a-z0-9]|[a-z0-9][a-z0-9.-]{0,500}[a-z0-9])\.[a-z]{2,64}'
 
 DIGEST="sha256"
 KEYCRYPTALGO="aes256"
 RSA_KEY_LENGTH="4096"
-OUTDIR=""
+BASEOUTPUTDIR=""
 SUBJECT=""
 CN=""
 S_ALTNAME=""
@@ -25,10 +37,10 @@ D=$(date +"%Y%m%d")
 
 USAGE() {
   cat <<-_
-		Usage: ${ME} [ -d <message_digest> -l <rsa_key_length> -c <algo_to_encrypt_pkey> -a <alt_names>] -s <cert_subject> -o <basic_output_directory>
+		Usage: ${ME} [ -d <message_digest> -l <rsa_key_length> -c <algo_to_encrypt_pkey> -a <alt_names> ] -s <cert_subject> -o <basic_output_directory>
 		Defaults:
 		  -a -> DNS:<common_name>,email:<copied_from_subject_if_any>
-		  -c -> ${KEYCRYPTALGO} (Set to 'NONE', if you don't want to crypt private key)
+		  -c -> ${KEYCRYPTALGO} (Set to 'NONE', if you don't want to encrypt private key)
 		  -d -> ${DIGEST}
 		  -l -> ${RSA_KEY_LENGTH} (Must be >= 2048)
 		  -o -> NODEFAULT (must exist)
@@ -47,7 +59,7 @@ while getopts a:c:d:l:o:s: opt;do
     c) KEYCRYPTALGO=${OPTARG};;
     d) DIGEST=${OPTARG};;
     l) RSA_KEY_LENGTH=${OPTARG};;
-    o) OUTDIR=${OPTARG};;
+    o) BASEOUTPUTDIR=${OPTARG};;
     s) SUBJECT=${OPTARG};;
     *) USAGE;exit 1 ;;
   esac
@@ -57,16 +69,17 @@ done
 
 
 
-if ! [ -d "${OUTDIR}" ] ; then
+if ! [ -d "${BASEOUTPUTDIR}" ] ; then
   USAGE
   exit 1
 fi
 
 
-CN="$(echo ${SUBJECT} | grep -iEo "/CN=${CN_RE}(/|$)" | tr -d "/" | sed 's|^CN=||' | tr A-Z a-z)"
+CN="$(echo ${SUBJECT} | grep -iEo "/CN=${CN_RE}(/|$)" | tr -d "/" | cut -d= -f2 | tr A-Z a-z)"
 
 if [ -z "${CN}" ] ; then
-  echo "${ME}: Invalid  or missing CN. Can't proceed" 1>&2
+  echo "${ME}: Invalid or missing CommonName. Exiting" 1>&2
+  echo 1>&2
   USAGE 1>&2
   exit 1
 fi
@@ -82,18 +95,18 @@ else
   CRYPTARG="-${KEYCRYPTALGO}"
 fi
 
-OUT="${OUTDIR}/${CN}/${D}"
-if [ -e "${OUT}" ] ; then
-  echo "${ME}: Directory for key and req '${OUT}' already exists. Exiting" 1>&2
+OUTDIR="${BASEOUTPUTDIR}/${CN}/${D}"
+if [ -e "${OUTDIR}" ] ; then
+  echo "${ME}: Directory for key and req '${OUTDIR}' already exists. Exiting" 1>&2
   exit 1
 fi
-mkdir -p "${OUT}"
+mkdir -p "${OUTDIR}"
 
 
 set -C
-openssl genpkey -algorithm RSA ${CRYPTARG} -pkeyopt "rsa_keygen_bits:${RSA_KEY_LENGTH}" > "${OUT}/${CN}.key"
+openssl genpkey -algorithm RSA ${CRYPTARG} -pkeyopt "rsa_keygen_bits:${RSA_KEY_LENGTH}" > "${OUTDIR}/${CN}.key"
 openssl req -new -subj "${SUBJECT}" \
   -addext "subjectAltName =  ${S_ALTNAME}" \
-  -key "${OUT}/${CN}.key" \
-  > "${OUT}/${CN}.csr"
+  -key "${OUTDIR}/${CN}.key" \
+  > "${OUTDIR}/${CN}.csr"
 set +C
