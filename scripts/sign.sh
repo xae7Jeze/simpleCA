@@ -2,7 +2,7 @@
 #
 # Author: github.com/xae7Jeze
 #
-V=20230106.6
+V=20230106.7
 
 set -e -u
 
@@ -43,7 +43,7 @@ USAGE() {
 	  -i -> NODEFAULT
 	  -t -> ${DAYS} (Time in days certificate is valid)
 	
-    Output goes to ${CADIR}/certs/${CN}/${D}
+    Output goes to ${CADIR}/certs/<common_name>/<YYYYmmddHHMMSS>
 	
 	  Version: $V
 	
