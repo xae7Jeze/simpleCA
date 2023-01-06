@@ -2,7 +2,7 @@
 #
 # Author: github.com/xae7Jeze
 #
-V=20230106.3
+V=20230106.4
 
 set -e -u
 
@@ -89,8 +89,8 @@ if ! openssl dgst "-${DIGEST}" > /dev/null 2>&1 < /dev/null; then
 fi
  
 
-REQDIR="${CADIR}/reqs/${D}/${CN}"
-CRTDIR="${CADIR}/certs/${D}/${CN}"
+REQDIR="${CADIR}/reqs/${CN}/${D}"
+CRTDIR="${CADIR}/certs/${CN}/${D}"
 EXTFILE="${REQDIR}/${CN}.ext"
 REQFILE="${REQDIR}/${CN}.csr"
 CRTFILE="${CRTDIR}/${CN}.crt"
