@@ -2,7 +2,7 @@
 #
 # Author: github.com/xae7Jeze
 #
-V=20230106.6
+V=20230106.7
 
 set -e -u
 
@@ -183,7 +183,29 @@ base64 -d > "${SIGN_SH}" <<_
 $SIGN_SH_SRC
 _
 chmod 700 "${SIGN_SH}"
-openssl genpkey -algorithm RSA "-${KEYCRYPTALGO}" -pkeyopt "rsa_keygen_bits:${RSA_KEY_LENGTH}" > "${CAKEY}"
-openssl req -x509 -new -key "${CAKEY}" "-${DIGEST}" -days "${DAYS}" -subj "$CASUBJECT" > "${CACRT}"
+for i in 1 2 3; do 
+  KEY=$(openssl genpkey -algorithm RSA "-${KEYCRYPTALGO}" -pkeyopt "rsa_keygen_bits:${RSA_KEY_LENGTH}" 2>/dev/null) && break
+  echo "${ME}: Error passphrase to short or didn't match. Try again when prompted" 1>&2
+done
+if [ -z "${KEY}" ]; then
+  echo "${ME}: Error generationg private key" 1>&2
+	exit 1
+fi
+cat > "${CAKEY}" <<_
+$KEY
+_
+unset KEY
+for i in 1 2 3; do 
+  CRT=$(openssl req -x509 -new -key "${CAKEY}" "-${DIGEST}" -days "${DAYS}" -subj "$CASUBJECT" 2>/dev/null) && break
+  echo "${ME}: Error passphrase didn't match. Try again" 1>&2
+done
+if [ -z "${CRT}" ]; then
+  echo "${ME}: Error generationg certificate" 1>&2
+	exit 1
+fi
+cat > "${CACRT}" <<_
+$CRT
+_
+unset CRT
 set +C
 echo "${ME}: CA created in ${CADIR}"
