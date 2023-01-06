@@ -2,7 +2,7 @@
 #
 # Author: github.com/xae7Jeze
 #
-V=20230106.7
+V=20230106.8
 
 set -e -u
 
@@ -73,7 +73,7 @@ fi
 
 
 if ! [ -f "${INFILE}" ] ; then
-  USAGE
+	echo "${ME}: ERROR: Opening input file failed" 1>&2
   exit 1
 fi
 
