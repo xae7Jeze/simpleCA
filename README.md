@@ -29,12 +29,12 @@ _All scripts give help when called with `-h`_
 cd /home/EXAMPLE_USER/simpleCA/scripts
 ./newCA.sh -b /home/EXAMPLE_USER/CAs -n testCA -s '/CN=blabla/O=blub'
 ```
-* Create a request with subject `CN=example.com` in `/home/EXAMPLE_USER/CAs/testCA/incoming/example.com/<YYYYmmddHHMMSS>`
+* Create a request with subject `CN=example.com` in `/home/EXAMPLE_USER/CAs/testCA/incoming/example.com/YYYYmmddHHMMSS`
 ```
 ./newreq.sh -s '/CN=example.com/' -o /home/EXAMPLE_USER/CAs/testCA/incoming/
 ```
-* Sign request and write resulting certificate to /home/EXAMPLE_USER/CAs/testCA/certs/example.com/<YYYYmmddHHMMSS>
+* Sign request and write resulting certificate to /home/EXAMPLE_USER/CAs/testCA/certs/example.com/YYYYmmddHHMMSS
 ```
 cd /home/EXAMPLE_USER/CAs/testCA/
-./sign.sh -i /home/EXAMPLE_USER/CAs/testCA/incoming/example.com/<YYYYmmddHHMMSS>/example.com.csr
+./sign.sh -i /home/EXAMPLE_USER/CAs/testCA/incoming/example.com/YYYYmmddHHMMSS/example.com.csr
 ```
