@@ -2,7 +2,7 @@
 #
 # Author: github.com/xae7Jeze
 #
-V=20230106.2
+V=20230107.0
 
 set -e -u
 
@@ -11,11 +11,6 @@ LC_ALL=C
 LANG=C
 ME=${0##*/}
 umask 077
-
-if [ $(id -u) -eq 0 ]; then
-  echo "${ME}: Won't run with UID 0 (root). Exiting" 1>&2
-  exit 1
-fi
 
 MYUID=$(id -u)
 if [ ${MYUID:-0} -eq 0 ]; then
@@ -34,15 +29,15 @@ CN=""
 S_ALTNAME=""
 D=$(date "+%Y%m%d%H%M%S")
 
-
 USAGE() {
-  cat <<-_
+  cat 1>&2 <<-_
 		Usage: ${ME} [ -d <message_digest> -l <rsa_key_length> -c <algo_to_encrypt_pkey> -a <alt_names> ] -s <cert_subject> -o <basic_output_directory>
+		Usage: ${ME} -h
 		Defaults:
 		  -a -> DNS:<common_name>,email:<copied_from_subject_if_any>
-		  -c -> ${KEYCRYPTALGO} (Set to 'NONE', if you don't want to encrypt private key)
-		  -d -> ${DIGEST}
-		  -l -> ${RSA_KEY_LENGTH} (Must be >= 2048)
+		  -c -> aes256 (Set to 'NONE', if you don't want to encrypt private key)
+		  -d -> sha256
+		  -l -> 4096 (Must be >= 2048)
 		  -o -> NODEFAULT (must exist)
 		  -s -> NODEFAULT (Must be formatted as expected by openssl req '-subj' arg, CN is mandatory and must be valid FQDN)
   
@@ -53,34 +48,29 @@ USAGE() {
 	_
 }
 
-while getopts a:c:d:l:o:s: opt;do
+while getopts a:c:d:l:o:s:h opt;do
   case $opt in
     a) S_ALTNAME=${OPTARG};;
     c) KEYCRYPTALGO=${OPTARG};;
     d) DIGEST=${OPTARG};;
+    h) USAGE; exit 0 ;;
     l) RSA_KEY_LENGTH=${OPTARG};;
     o) BASEOUTPUTDIR=${OPTARG};;
     s) SUBJECT=${OPTARG};;
-    *) USAGE;exit 1 ;;
+    *) USAGE; exit 1 ;;
   esac
 done
 
-
-
-
-
 if ! [ -d "${BASEOUTPUTDIR}" ] ; then
+  echo "${ME}: ERROR: Basic output directory doesn't exist." 1>&2
   USAGE
   exit 1
 fi
 
-
 CN="$(echo ${SUBJECT} | grep -iEo "/CN=${CN_RE}(/|$)" | tr -d "/" | cut -d= -f2 | tr A-Z a-z)"
 
 if [ -z "${CN}" ] ; then
-  echo "${ME}: Invalid or missing CommonName. Exiting" 1>&2
-  echo 1>&2
-  USAGE 1>&2
+  echo "${ME}: ERROR: Invalid or missing CommonName." 1>&2
   exit 1
 fi
 
@@ -97,18 +87,27 @@ fi
 
 OUTDIR="${BASEOUTPUTDIR}/${CN}/${D}"
 if [ -e "${OUTDIR}" ] ; then
-  echo "${ME}: Directory for key and req '${OUTDIR}' already exists. Exiting" 1>&2
+  echo "${ME}: ERROR: Output-Directory already exists." 1>&2
   exit 1
 fi
 mkdir -p "${OUTDIR}"
 
 
 set -C
-openssl genpkey -algorithm RSA ${CRYPTARG} -pkeyopt "rsa_keygen_bits:${RSA_KEY_LENGTH}" > "${OUTDIR}/${CN}.key"
-openssl req -new -subj "${SUBJECT}" \
+if ! openssl genpkey -algorithm RSA ${CRYPTARG} -pkeyopt "rsa_keygen_bits:${RSA_KEY_LENGTH}" > "${OUTDIR}/${CN}.key"; then
+  echo "${ME}: ERROR: Creating PRIVATE KEY failed" 1>&2
+	rm -f "${OUTDIR}/${CN}.key"
+  exit 1
+fi
+if ! openssl req -new -subj "${SUBJECT}" \
   -addext "subjectAltName =  ${S_ALTNAME}" \
   -key "${OUTDIR}/${CN}.key" \
-  > "${OUTDIR}/${CN}.csr"
+  > "${OUTDIR}/${CN}.csr" ; then
+  echo "${ME}: ERROR: Creating CSR failed" 1>&2
+	rm -f "${OUTDIR}/${CN}.key" "${OUTDIR}/${CN}.csr" 
+  exit 1
+fi
 set +C
 
-echo "${ME}: New request generated in ${OUTDIR}"
+echo "${ME}: SUCCESS: New request generated in '${OUTDIR}'"
+exit 0
