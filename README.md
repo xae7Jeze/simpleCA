@@ -20,18 +20,18 @@ simpleCA is a collection of scripts to create a very simple CA and sign requests
 
 _All scripts give help when called with `-h`_
 ## Example
-* First create a user for ca actions: `useradd -d /home/_EXAMPLE_USER_ -m -s /usr/sbin/nologin _EXAMPLE_USER_
-* sudo or su to _EXAMPLE_USER_
-* Checkout simpleCA to /home/_EXAMPLE_USER_/simpleCA :  `git clone https://github.com/xae7Jeze/simpleCA.git`
-* Create directory for CAs: mkdir `/home/_EXAMPLE_USER_/CAs && chmod 700 /home/_EXAMPLE_USER_/CAs`
-* Create new CA in /home/_EXAMPLE_USER_/CAs/testCA 
+* First create a user for ca actions: `useradd -d /home/EXAMPLE_USER -m -s /usr/sbin/nologin EXAMPLE_USER
+* sudo or su to EXAMPLE_USER
+* Checkout simpleCA to /home/EXAMPLE_USER/simpleCA :  `git clone https://github.com/xae7Jeze/simpleCA.git`
+* Create directory for CAs: mkdir `/home/EXAMPLE_USER/CAs && chmod 700 /home/EXAMPLE_USER/CAs`
+* Create new CA in /home/EXAMPLE_USER/CAs/testCA 
 ```
 cd /home/_EXAMPLE_USER_/simpleCA/scripts
-./newCA.sh -b /home/_EXAMPLE_USER_/CAs -n testCA -s '/CN=blabla/O=blub'
-* Create a request with subject `CN=example.com` in `/home/_EXAMPLE_USER_/CAs/testCA/incoming/example.com/<YYYYmmddHHMMSS>`
+./newCA.sh -b /home/EXAMPLE_USER/CAs -n testCA -s '/CN=blabla/O=blub'
+* Create a request with subject `CN=example.com` in `/home/EXAMPLE_USER/CAs/testCA/incoming/example.com/<YYYYmmddHHMMSS>`
 ./newreq.sh -s '/CN=example.com/' -o /home/_EXAMPLE_USER_/CAs/testCA/incoming/
 ```
-* Sign request and write resulting certificate to /home/_EXAMPLE_USER_/CAs/testCA/certs/example.com/<YYYYmmddHHMMSS>
+* Sign request and write resulting certificate to /home/EXAMPLE_USER/CAs/testCA/certs/example.com/<YYYYmmddHHMMSS>
 ```
 cd /home/_EXAMPLE_USER_/CAs/testCA/
 ./sign.sh -i /home/_EXAMPLE_USER_/CAs/testCA/incoming/example.com/<YYYYmmddHHMMSS>/example.com.csr
