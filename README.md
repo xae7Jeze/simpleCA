@@ -26,13 +26,13 @@ _All scripts give help when called with `-h`_
 * Create directory for CAs: mkdir `/home/EXAMPLE_USER/CAs && chmod 700 /home/EXAMPLE_USER/CAs`
 * Create new CA in /home/EXAMPLE_USER/CAs/testCA 
 ```
-cd /home/_EXAMPLE_USER_/simpleCA/scripts
+cd /home/EXAMPLE_USER/simpleCA/scripts
 ./newCA.sh -b /home/EXAMPLE_USER/CAs -n testCA -s '/CN=blabla/O=blub'
 * Create a request with subject `CN=example.com` in `/home/EXAMPLE_USER/CAs/testCA/incoming/example.com/<YYYYmmddHHMMSS>`
-./newreq.sh -s '/CN=example.com/' -o /home/_EXAMPLE_USER_/CAs/testCA/incoming/
+./newreq.sh -s '/CN=example.com/' -o /home/EXAMPLE_USER/CAs/testCA/incoming/
 ```
 * Sign request and write resulting certificate to /home/EXAMPLE_USER/CAs/testCA/certs/example.com/<YYYYmmddHHMMSS>
 ```
-cd /home/_EXAMPLE_USER_/CAs/testCA/
-./sign.sh -i /home/_EXAMPLE_USER_/CAs/testCA/incoming/example.com/<YYYYmmddHHMMSS>/example.com.csr
+cd /home/EXAMPLE_USER/CAs/testCA/
+./sign.sh -i /home/EXAMPLE_USER/CAs/testCA/incoming/example.com/<YYYYmmddHHMMSS>/example.com.csr
 ```
